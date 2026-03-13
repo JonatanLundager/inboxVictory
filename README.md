@@ -1,4 +1,4 @@
-# Mission Accomplished 🇺🇸🦅
+# Inbox Victory 🇺🇸🦅
 
 A Chrome extension for Gmail that celebrates every sent email like you just won a major historical conflict.
 
