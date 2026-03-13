@@ -1,0 +1,29 @@
+{
+  "manifest_version": 3,
+  "name": "Inbox Victory",
+  "version": "1.1.0",
+  "description": "Plays randomized image + jingle celebrations in Gmail with Side Panel controls.",
+  "permissions": ["sidePanel", "storage"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "Inbox Victory"
+  },
+  "side_panel": {
+    "default_path": "sidebar.html"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://mail.google.com/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["assets/library.json", "assets/images/*", "assets/jingles/*"],
+      "matches": ["https://mail.google.com/*"]
+    }
+  ]
+}
