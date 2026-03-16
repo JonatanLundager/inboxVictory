@@ -5,6 +5,8 @@
   const SEND_FALLBACK_DELAY_MS = 250;
   const IMAGE_EXTENSIONS = ["png", "jpg", "jpeg", "webp", "gif"];
   const JINGLE_EXTENSIONS = ["mp3", "wav", "ogg", "m4a"];
+  const JINGLE_VOLUME = 0.45;
+  const PATRIOTIC_GAIN = 0.12;
 
   let lastTriggerAt = 0;
   let pendingFallbackTimer = null;
@@ -12,6 +14,7 @@
   let mediaPairs = [];
   let mediaLoadPromise = null;
   let enabledEntriesMap = {};
+  let customEntriesMap = {};
   let celebrationEnabled = true;
 
   function getAudioContext() {
@@ -60,7 +63,7 @@
     ];
     let startAt = ctx.currentTime + 0.03;
     for (const [freq, dur] of notes) {
-      createTone(ctx, freq, startAt, dur, 0.08);
+      createTone(ctx, freq, startAt, dur, PATRIOTIC_GAIN);
       startAt += dur + 0.04;
     }
   }
@@ -93,11 +96,38 @@
     mediaLoadPromise = (async () => {
       const pairs = [];
       try {
-        enabledEntriesMap = await new Promise((resolve) => {
-          chrome.storage.local.get({ enabledEntries: {} }, (result) => {
-            resolve(result.enabledEntries || {});
+        const { enabledEntries, customEntries } = await new Promise((resolve) => {
+          chrome.storage.local.get({ enabledEntries: {}, customEntries: {} }, (result) => {
+            resolve({
+              enabledEntries: result.enabledEntries || {},
+              customEntries: result.customEntries || {}
+            });
           });
         });
+        enabledEntriesMap = enabledEntries;
+        customEntriesMap = customEntries;
+
+        for (const [name, customEntry] of Object.entries(customEntriesMap)) {
+          if (enabledEntriesMap[name] === false) {
+            continue;
+          }
+          if (!customEntry || typeof customEntry !== "object") {
+            continue;
+          }
+          if (typeof customEntry.imageUrl !== "string" || customEntry.imageUrl.trim() === "") {
+            continue;
+          }
+          const jingleUrl = typeof customEntry.jingleUrl === "string" && customEntry.jingleUrl.trim() !== ""
+            ? customEntry.jingleUrl
+            : null;
+          pairs.push({
+            name,
+            imageUrl: customEntry.imageUrl,
+            jingleUrl
+          });
+        }
+
+        const customEntryNames = new Set(Object.keys(customEntriesMap));
 
         const indexUrl = chrome.runtime.getURL("assets/library.json");
         const response = await fetch(indexUrl, { cache: "no-store" });
@@ -109,6 +139,9 @@
               continue;
             }
             const name = entry.trim();
+            if (customEntryNames.has(name)) {
+              continue;
+            }
             if (enabledEntriesMap[name] === false) {
               continue;
             }
@@ -193,7 +226,7 @@
     }
 
     const audio = new Audio(jingleUrl);
-    audio.volume = 0.9;
+    audio.volume = JINGLE_VOLUME;
     audio.play().catch(() => {
       playPatrioticTune();
     });
@@ -276,7 +309,7 @@
     if (!targetElement) {
       return false;
     }
-    const button = targetElement.closest("[role='button'], [gh='mtb']");
+    const button = targetElement.closest("[role='button']");
     if (!button) {
       return false;
     }
@@ -285,16 +318,11 @@
       return true;
     }
 
-    const gh = button.getAttribute("gh") || button.closest("[gh]")?.getAttribute("gh");
-    if (gh === "mtb") {
-      return true;
-    }
-
     const text = [button.getAttribute("aria-label"), button.getAttribute("data-tooltip"), button.textContent]
       .filter(Boolean)
       .join(" ")
       .toLowerCase();
-    if (text.includes("send") || text.includes("ctrl-enter") || text.includes("cmd-enter")) {
+    if (/\bsend\b/.test(text) || text.includes("ctrl-enter") || text.includes("cmd-enter")) {
       return true;
     }
 
@@ -344,6 +372,10 @@
         return;
       }
       if (changes.enabledEntries) {
+        mediaLoadPromise = null;
+        loadMediaLibrary();
+      }
+      if (changes.customEntries) {
         mediaLoadPromise = null;
         loadMediaLibrary();
       }

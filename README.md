@@ -46,11 +46,15 @@ Example:
 - Click the extension icon to open the side panel.
 - Toggle individual entries on/off.
 - Use the top global toggle to disable all celebrations instantly.
+- Upload custom image/GIF + sound pairs directly from the side panel.
+- If both uploaded files share the same base filename, the pair name auto-fills; otherwise set a custom entry name.
+- Delete custom pairs from the side panel list at any time.
 
 ## Important notes
 
 - If jingles are missing, it falls back to a built-in patriotic synth tune.
 - If you add/rename files, update `assets/library.json` and reload the extension.
+- Side panel uploads are stored in `chrome.storage.local` (data URLs), so very large files may exceed extension storage limits.
 - Gmail changes UI often; this extension uses multiple detection methods to stay resilient.
 
 ## FAQ

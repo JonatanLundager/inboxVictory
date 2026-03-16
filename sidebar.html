@@ -14,6 +14,24 @@
         <span id="global-toggle-status" class="global-toggle-status"></span>
       </div>
       <p class="hint">Enable which image+jingle pairs are allowed in random rotation.</p>
+      <section class="upload">
+        <h2>Add custom pair</h2>
+        <label class="field">
+          <span>Entry name (optional)</span>
+          <input id="custom-entry-name" type="text" placeholder="eagle_mode" />
+        </label>
+        <label class="field">
+          <span>Image or GIF</span>
+          <input id="custom-image-file" type="file" accept="image/png,image/jpeg,image/webp,image/gif" />
+        </label>
+        <label class="field">
+          <span>Matching sound</span>
+          <input id="custom-sound-file" type="file" accept="audio/*" />
+        </label>
+        <button id="custom-upload-btn" type="button">Save custom pair</button>
+        <p id="custom-upload-status" class="upload-status" aria-live="polite"></p>
+      </section>
+      <h2 class="entries-title">Available pairs</h2>
       <div id="entries" class="entries"></div>
     </main>
     <script src="sidebar.js"></script>
